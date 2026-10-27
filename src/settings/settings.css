@@ -25,8 +25,38 @@ button { border: 0; cursor: pointer; }
 button:disabled, select:disabled { cursor: default; opacity: .45; }
 button:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 3px solid var(--sky); outline-offset: 3px; }
 .settings-header { display: flex; height: 116px; align-items: center; gap: 16px; }
-#settings-nooby { flex: 0 0 64px; width: 64px; height: 76px; }
+#settings-nooby { display: grid; flex: 0 0 64px; width: 64px; height: 76px; place-items: center; }
 #settings-nooby .nooby { filter: drop-shadow(0 0 14px color-mix(in srgb, var(--nooby-color) 38%, transparent)); }
+.nooby-stage {
+  --nooby-light: color-mix(in srgb, var(--nooby-color) 48%, white);
+  --nooby-shine: color-mix(in srgb, var(--nooby-color) 16%, white);
+  --nooby-deep: color-mix(in srgb, var(--nooby-color) 64%, #44324f);
+  position: relative; display: inline-block; vertical-align: middle; perspective: 520px; isolation: isolate;
+}
+.nooby-tilt { position: relative; z-index: 1; width: 100%; height: 100%; transform-style: preserve-3d; transition: transform .46s var(--spring); }
+.nooby-stage:hover .nooby-tilt { will-change: transform; }
+.nooby-ground {
+  position: absolute; z-index: 0; right: 18%; bottom: 1%; left: 18%; height: 8%; border-radius: 50%;
+  background: rgba(0,0,0,.4); filter: blur(3px); opacity: .42; transform-origin: center;
+  animation: noobyGroundBob 3.8s ease-in-out infinite;
+}
+.nooby-stage.is-hopping .nooby-ground { animation: noobyGroundHop .48s cubic-bezier(.34,1.56,.64,1); }
+.nooby-stage.is-petting .nooby-ground { animation: noobyGroundSquish .55s cubic-bezier(.34,1.56,.64,1); }
+.nooby-stage.is-paused .nooby-ground { animation-play-state: paused !important; }
+.nooby-stage.is-small .body-rim, .nooby-stage.is-small .body-shade, .nooby-stage.is-small .eye-reflection { display: none; }
+.nooby-stage.is-small .nooby-ground { filter: blur(2px); opacity: .3; }
+.nooby-stage.no-tilt .nooby-tilt { transform: none !important; transition: none; }
+@keyframes noobyGroundBob { 0%,100% { transform: scaleX(1); opacity: .42; } 50% { transform: scaleX(.92); opacity: .32; } }
+@keyframes noobyGroundHop {
+  0%,100% { transform: scaleX(1); opacity: .42; } 12% { transform: scaleX(1.14); opacity: .5; }
+  45% { transform: scale(.68,.8); opacity: .16; } 72% { transform: scaleX(1.28); opacity: .55; }
+}
+@keyframes noobyGroundSquish { 0%,100% { transform: scaleX(1); } 35% { transform: scaleX(1.18); } 70% { transform: scaleX(.94); } }
+@media (prefers-reduced-motion: reduce) {
+  .nooby-stage .nooby-tilt { transform: none !important; transition: none; will-change: auto; }
+  .nooby-stage .nooby-ground { animation: none; }
+  .nooby-stage .body-layer, .nooby-stage .face-layer { transform: none !important; }
+}
 h1 { margin: 0; font-size: 28px; font-weight: 900; letter-spacing: -.5px; }
 .settings-header p { margin: 4px 0 0; color: var(--muted); font-size: 13px; }
 main { display: flex; flex-direction: column; gap: 16px; }
