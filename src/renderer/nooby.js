@@ -1,9 +1,33 @@
 'use strict';
 
 (() => {
+  // Landscape width-to-height ratio for Nooby's body and component box.
+  const NOOBY_ASPECT = 1.35;
+  // Squircle corner radius as a fraction of body height.
+  const NOOBY_RADIUS = 0.36;
   const MOODS = ['idle', 'happy', 'thinking', 'sleepy', 'surprised', 'oops', 'love'];
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   let noobyUid = 0;
+
+  function squirclePath(x, y, width, height) {
+    const radius = Math.min(width / 2, height * NOOBY_RADIUS);
+    const c = radius * 0.2;
+    const n = (value) => Number(value.toFixed(2));
+    // Paired cubics meet with matching tangent and curvature at every join.
+    function corner(baseX, baseY, quarter) {
+      const point = (u, v) => {
+        const offsets = [[u, v], [-v, u], [-u, -v], [v, -u]][quarter];
+        return `${n(baseX + offsets[0])} ${n(baseY + offsets[1])}`;
+      };
+      return `C ${point(c, 0)} ${point(radius - 2 * c, 0)} ${point(radius - c, c)} C ${point(radius, 2 * c)} ${point(radius, 4 * c)} ${point(radius, radius)}`;
+    }
+    return [
+      `M ${n(x + radius)} ${n(y)}`, `H ${n(x + width - radius)}`, corner(x + width - radius, y, 0),
+      `V ${n(y + height - radius)}`, corner(x + width, y + height - radius, 1),
+      `H ${n(x + radius)}`, corner(x + radius, y + height, 2),
+      `V ${n(y + radius)}`, corner(x, y + radius, 3), 'Z'
+    ].join(' ');
+  }
 
   function createNooby({ size = 84, color = '#B8F2D0', mood = 'idle', passive = false } = {}) {
     const root = document.createElement('div');
@@ -18,8 +42,39 @@
     let moodBeforePet = currentMood;
     let lastActivity = 0;
     let destroyed = false;
+    const viewHeight = 100;
+    const viewWidth = viewHeight * NOOBY_ASPECT;
+    const bodyHeight = 76;
+    const bodyWidth = bodyHeight * NOOBY_ASPECT;
+    const bodyX = (viewWidth - bodyWidth) / 2;
+    const bodyY = 16;
+    const eyeRX = bodyWidth * 0.052;
+    const eyeRY = bodyHeight * 0.15;
+    const eyeY = bodyY + bodyHeight * 0.43;
+    const mouthY = bodyY + bodyHeight * 0.7;
+    const n = (value) => Number(value.toFixed(2));
+    const X = (fraction) => n(bodyX + bodyWidth * fraction);
+    const Y = (fraction) => n(bodyY + bodyHeight * fraction);
+    const bodyPath = squirclePath(bodyX, bodyY, bodyWidth, bodyHeight);
+    const rimPath = squirclePath(bodyX + 1.2, bodyY + 1.2, bodyWidth - 2.4, bodyHeight - 2.4);
+    const localPoint = (cx, cy, scale) => (x, y) => `${n(cx + x * scale)} ${n(cy + y * scale)}`;
+    function glassEye(cx, cy, rx = eyeRX, ry = eyeRY) {
+      return `<ellipse cx="${n(cx)}" cy="${n(cy)}" rx="${n(rx)}" ry="${n(ry)}" fill="url(#${uid}-eyes)"/><circle cx="${n(cx - rx * 0.38)}" cy="${n(cy - ry * 0.42)}" r="${n(rx * 0.36)}" fill="#fff"/><circle cx="${n(cx + rx * 0.4)}" cy="${n(cy + ry * 0.22)}" r="${n(rx * 0.16)}" fill="#fff" opacity=".9"/><ellipse class="eye-reflection" cx="${n(cx)}" cy="${n(cy + ry * 0.72)}" rx="${n(rx * 0.52)}" ry="${n(ry * 0.1)}"/>`;
+    }
+    function happyEye(cx) {
+      return `M ${n(cx - eyeRX)} ${n(eyeY + eyeRY * 0.15)} Q ${n(cx)} ${n(eyeY - eyeRY * 0.75)} ${n(cx + eyeRX)} ${n(eyeY + eyeRY * 0.15)}`;
+    }
+    function spiralEye(cx) {
+      const p = localPoint(cx, eyeY, eyeRX / 7);
+      return `M ${p(0, -5)} C ${p(-9, -9)} ${p(-9, 8)} ${p(0, 8)} C ${p(8, 8)} ${p(7, -4)} ${p(0, -2)} C ${p(-5, -1)} ${p(-2, 4)} ${p(1, 2)}`;
+    }
+    function heart(cx, cy, scale = eyeRX / 7) {
+      const p = localPoint(cx, cy, scale);
+      return `M ${p(0, 8)} C ${p(-4, 4)} ${p(-11, -1)} ${p(-9, -6)} C ${p(-7, -11)} ${p(-2, -9)} ${p(0, -6)} C ${p(2, -9)} ${p(7, -11)} ${p(9, -6)} C ${p(11, -1)} ${p(4, 4)} ${p(0, 8)} Z`;
+    }
+    const sweatPoint = localPoint(X(0.88), Y(0.22), bodyHeight / 76);
 
-    svg.setAttribute('viewBox', '0 0 100 116');
+    svg.setAttribute('viewBox', `0 0 ${n(viewWidth)} ${viewHeight}`);
     svg.setAttribute('role', 'img');
     svg.setAttribute('aria-label', 'Nooby, a small cheerful squircle');
     root.classList.add('nooby-stage');
@@ -27,10 +82,11 @@
     if (safeSize <= 32) root.classList.add('is-small', 'no-tilt');
     root.dataset.mood = currentMood;
     svg.dataset.mood = currentMood;
-    root.style.width = `${safeSize}px`;
-    root.style.height = `${safeSize * 1.16}px`;
+    root.style.width = `${n(safeSize * NOOBY_ASPECT)}px`;
+    root.style.height = `${safeSize}px`;
     root.style.setProperty('--nooby-color', /^#[0-9a-f]{6}$/i.test(color) ? color : '#B8F2D0');
     svg.style.setProperty('--nooby-color', /^#[0-9a-f]{6}$/i.test(color) ? color : '#B8F2D0');
+    svg.style.setProperty('--nooby-pivot', `${n((bodyY + bodyHeight) / viewHeight * 100)}%`);
     svg.style.width = '100%';
     svg.style.height = '100%';
     tilt.className = 'nooby-tilt';
@@ -40,7 +96,7 @@
     root.append(ground, tilt);
     svg.innerHTML = `
       <style>
-        .nooby{display:block;overflow:visible;transform-origin:50% 80%;animation:noobyBob 3.8s ease-in-out infinite;cursor:pointer}
+        .nooby{display:block;overflow:visible;transform-origin:50% var(--nooby-pivot,92%);animation:noobyBob 3.8s ease-in-out infinite;cursor:pointer}
         .nooby *{transform-box:fill-box}.nooby .body{filter:drop-shadow(0 3px 3px rgba(0,0,0,.2));transform-origin:center}
         .nooby .body-layer{transform:translate(var(--body-x,0px),var(--body-y,0px));transition:transform .42s cubic-bezier(.22,1.32,.36,1)}
         .nooby .face-layer{transform:translate(var(--face-x,0px),var(--face-y,0px));transition:transform .36s cubic-bezier(.22,1.32,.36,1)}
@@ -76,10 +132,10 @@
         @media(prefers-reduced-motion:reduce){.nooby,.nooby *{animation:none!important;transition:none!important}}
       </style>
       <defs>
-        <linearGradient id="${uid}-body" gradientUnits="userSpaceOnUse" x1="18" y1="22" x2="86" y2="98">
+        <linearGradient id="${uid}-body" gradientUnits="userSpaceOnUse" x1="${X(0.08)}" y1="${Y(0.06)}" x2="${X(0.92)}" y2="${Y(0.94)}">
           <stop offset="0" stop-color="var(--nooby-light)"/><stop offset=".48" stop-color="var(--nooby-color)"/><stop offset="1" stop-color="var(--nooby-deep)"/>
         </linearGradient>
-        <linearGradient id="${uid}-rim" gradientUnits="userSpaceOnUse" x1="20" y1="24" x2="76" y2="96">
+        <linearGradient id="${uid}-rim" gradientUnits="userSpaceOnUse" x1="${X(0.15)}" y1="${Y(0.08)}" x2="${X(0.78)}" y2="${Y(0.93)}">
           <stop offset="0" stop-color="var(--nooby-shine)"/><stop offset=".55" stop-color="var(--nooby-color)"/><stop offset="1" stop-color="var(--nooby-deep)"/>
         </linearGradient>
         <radialGradient id="${uid}-gloss" cx="35%" cy="35%" r="65%">
@@ -90,52 +146,47 @@
         </linearGradient>
       </defs>
       <g class="body-layer">
-        <rect class="body" x="10" y="20" width="80" height="80" rx="26" fill="url(#${uid}-body)"/>
-        <rect class="body-rim" x="11.2" y="21.2" width="77.6" height="77.6" rx="24.8" fill="none" stroke="url(#${uid}-rim)" stroke-width="1.6" opacity=".72"/>
-        <path class="body-shade" d="M18 72 C20 89 33 96 50 96 C67 96 80 89 82 72" fill="none" stroke="var(--nooby-deep)" stroke-width="5" stroke-linecap="round" opacity=".34"/>
-        <ellipse class="specular" cx="34" cy="34" rx="21" ry="11" fill="url(#${uid}-gloss)" transform="rotate(-18 34 34)"/>
+        <path class="body" d="${bodyPath}" fill="url(#${uid}-body)"/>
+        <path class="body-rim" d="${rimPath}" fill="none" stroke="url(#${uid}-rim)" stroke-width="1.6" opacity=".72"/>
+        <path class="body-shade" d="M ${X(0.12)} ${Y(0.72)} C ${X(0.15)} ${Y(0.91)} ${X(0.32)} ${Y(0.96)} ${X(0.5)} ${Y(0.96)} C ${X(0.68)} ${Y(0.96)} ${X(0.85)} ${Y(0.91)} ${X(0.88)} ${Y(0.72)}" fill="none" stroke="var(--nooby-deep)" stroke-width="${n(bodyHeight * 0.055)}" stroke-linecap="round" opacity=".34"/>
+        <ellipse class="specular" cx="${X(0.23)}" cy="${Y(0.22)}" rx="${n(bodyWidth * 0.17)}" ry="${n(bodyHeight * 0.11)}" fill="url(#${uid}-gloss)" transform="rotate(-18 ${X(0.23)} ${Y(0.22)})"/>
       </g>
       <g class="face-layer">
-      <g class="cheeks"><ellipse cx="27" cy="68" rx="8.5" ry="5" fill="#FFABC4" opacity=".42"/><ellipse cx="73" cy="68" rx="8.5" ry="5" fill="#FFABC4" opacity=".42"/></g>
-      <g class="look-group">
-        <g class="eyes idle-eyes">
-          <g class="blinkable"><ellipse cx="36" cy="53" rx="7" ry="13" fill="url(#${uid}-eyes)"/><circle cx="33.5" cy="47.5" r="2.3" fill="#fff"/><circle cx="38.5" cy="56" r="1.1" fill="#fff" opacity=".9"/><ellipse class="eye-reflection" cx="36" cy="62" rx="3.7" ry="1.3"/></g>
-          <g class="blinkable"><ellipse cx="64" cy="53" rx="7" ry="13" fill="url(#${uid}-eyes)"/><circle cx="61.5" cy="47.5" r="2.3" fill="#fff"/><circle cx="66.5" cy="56" r="1.1" fill="#fff" opacity=".9"/><ellipse class="eye-reflection" cx="64" cy="62" rx="3.7" ry="1.3"/></g>
+        <g class="cheeks"><ellipse cx="${X(0.18)}" cy="${Y(0.64)}" rx="${n(bodyWidth * 0.07)}" ry="${n(bodyHeight * 0.06)}" fill="#FFABC4" opacity=".42"/><ellipse cx="${X(0.82)}" cy="${Y(0.64)}" rx="${n(bodyWidth * 0.07)}" ry="${n(bodyHeight * 0.06)}" fill="#FFABC4" opacity=".42"/></g>
+        <g class="look-group">
+          <g class="eyes idle-eyes">
+            <g class="blinkable">${glassEye(X(0.36), eyeY)}</g>
+            <g class="blinkable">${glassEye(X(0.64), eyeY)}</g>
+          </g>
+          <g class="eyes happy-eyes" fill="none" stroke="#111117" stroke-width="${n(eyeRX * 0.82)}" stroke-linecap="round">
+            <path d="${happyEye(X(0.36))}"/><path d="${happyEye(X(0.64))}"/>
+          </g>
+          <g class="eyes sleepy-eyes">
+            ${glassEye(X(0.36), n(eyeY + eyeRY * 0.18), n(eyeRX * 0.9), n(eyeRY * 0.58))}
+            ${glassEye(X(0.64), n(eyeY + eyeRY * 0.18), n(eyeRX * 0.9), n(eyeRY * 0.58))}
+            <path d="M ${n(X(0.36) - eyeRX)} ${n(eyeY)} Q ${X(0.36)} ${n(eyeY - eyeRY * 0.35)} ${n(X(0.36) + eyeRX)} ${n(eyeY)} M ${n(X(0.64) - eyeRX)} ${n(eyeY)} Q ${X(0.64)} ${n(eyeY - eyeRY * 0.35)} ${n(X(0.64) + eyeRX)} ${n(eyeY)}" fill="none" stroke="var(--nooby-color)" stroke-width="${n(eyeRY * 0.62)}" stroke-linecap="round"/>
+          </g>
+          <g class="eyes surprised-eyes">
+            ${glassEye(X(0.36), eyeY, n(eyeRX * 1.12), n(eyeRY * 1.1))}
+            ${glassEye(X(0.64), eyeY, n(eyeRX * 1.12), n(eyeRY * 1.1))}
+          </g>
+          <g class="eyes oops-eyes" fill="none" stroke="#111117" stroke-width="${n(eyeRX * 0.52)}" stroke-linecap="round">
+            <path d="${spiralEye(X(0.36))}"/><path d="${spiralEye(X(0.64))}"/>
+          </g>
+          <g class="eyes love-eyes" fill="#EF6E99">
+            <path d="${heart(X(0.36), eyeY)}"/><path d="${heart(X(0.64), eyeY)}"/>
+          </g>
         </g>
-        <g class="eyes happy-eyes" fill="none" stroke="#111117" stroke-width="5" stroke-linecap="round">
-          <path d="M29 55 Q36 45 43 55"/><path d="M57 55 Q64 45 71 55"/>
-        </g>
-        <g class="eyes sleepy-eyes">
-          <ellipse cx="36" cy="56" rx="6" ry="7" fill="url(#${uid}-eyes)"/><ellipse cx="64" cy="56" rx="6" ry="7" fill="url(#${uid}-eyes)"/>
-          <circle cx="34" cy="54" r="1.5" fill="#fff"/><circle cx="62" cy="54" r="1.5" fill="#fff"/>
-          <ellipse class="eye-reflection" cx="36" cy="61" rx="3" ry="1"/><ellipse class="eye-reflection" cx="64" cy="61" rx="3" ry="1"/>
-          <path d="M29 51 Q36 47 43 51 M57 51 Q64 47 71 51" fill="none" stroke="var(--nooby-color)" stroke-width="8" stroke-linecap="round"/>
-        </g>
-        <g class="eyes surprised-eyes">
-          <ellipse cx="36" cy="53" rx="8" ry="14" fill="url(#${uid}-eyes)"/><ellipse cx="64" cy="53" rx="8" ry="14" fill="url(#${uid}-eyes)"/>
-          <circle cx="33" cy="47" r="2.5" fill="#fff"/><circle cx="61" cy="47" r="2.5" fill="#fff"/>
-          <circle cx="39" cy="57" r="1.2" fill="#fff"/><circle cx="67" cy="57" r="1.2" fill="#fff"/>
-          <ellipse class="eye-reflection" cx="36" cy="63" rx="4" ry="1.4"/><ellipse class="eye-reflection" cx="64" cy="63" rx="4" ry="1.4"/>
-        </g>
-        <g class="eyes oops-eyes" fill="none" stroke="#111117" stroke-width="3" stroke-linecap="round">
-          <path d="M36 48 C27 44 27 61 36 61 C44 61 43 49 36 51 C31 52 34 57 37 55"/>
-          <path d="M64 48 C55 44 55 61 64 61 C72 61 71 49 64 51 C59 52 62 57 65 55"/>
-        </g>
-        <g class="eyes love-eyes" fill="#EF6E99">
-          <path d="M36 61 C32 57 25 52 27 47 C29 42 34 44 36 47 C38 44 43 42 45 47 C47 52 40 57 36 61Z"/>
-          <path d="M64 61 C60 57 53 52 55 47 C57 42 62 44 64 47 C66 44 71 42 73 47 C75 52 68 57 64 61Z"/>
-        </g>
+        <g class="mouth idle-mouth"><path d="M ${n(X(0.5) - 5)} ${mouthY} Q ${X(0.5)} ${n(mouthY + 5)} ${n(X(0.5) + 5)} ${mouthY}" fill="none" stroke="#111117" stroke-width="3" stroke-linecap="round"/></g>
+        <g class="mouth happy-mouth"><path d="M ${n(X(0.5) - 7)} ${n(mouthY - 2)} Q ${X(0.5)} ${n(mouthY + 9)} ${n(X(0.5) + 7)} ${n(mouthY - 2)} Q ${X(0.5)} ${n(mouthY + 3)} ${n(X(0.5) - 7)} ${n(mouthY - 2)} Z" fill="#111117"/></g>
+        <g class="mouth sleepy-mouth"><ellipse cx="${X(0.5)}" cy="${n(mouthY + 2)}" rx="3.2" ry="4.2" fill="#111117"/></g>
+        <g class="mouth surprised-mouth"><ellipse cx="${X(0.5)}" cy="${n(mouthY + 1)}" rx="4.5" ry="6" fill="#111117"/><ellipse cx="${n(X(0.5) - 1.3)}" cy="${n(mouthY - 1.5)}" rx="1.2" ry="1.6" fill="#fff" opacity=".45"/></g>
+        <g class="mouth oops-mouth"><path d="M ${n(X(0.5) - 7)} ${mouthY} Q ${n(X(0.5) - 3)} ${n(mouthY - 4)} ${X(0.5)} ${mouthY} Q ${n(X(0.5) + 4)} ${n(mouthY + 4)} ${n(X(0.5) + 8)} ${n(mouthY - 1)}" fill="none" stroke="#111117" stroke-width="3" stroke-linecap="round"/></g>
+        <g class="thought-dots" fill="#D5C8FF"><circle cx="${X(0.4)}" cy="${n(bodyY - 7)}" r="${n(bodyHeight * 0.04)}"/><circle cx="${X(0.5)}" cy="${n(bodyY - 10)}" r="${n(bodyHeight * 0.046)}"/><circle cx="${X(0.6)}" cy="${n(bodyY - 8)}" r="${n(bodyHeight * 0.04)}"/></g>
+        <g class="sleep-z" fill="#D5C8FF" font-family="Nunito,system-ui" font-weight="900"><text x="${X(0.78)}" y="${n(bodyY + 5)}" font-size="${n(bodyHeight * 0.18)}">z</text><text x="${X(0.86)}" y="${n(bodyY - 5)}" font-size="${n(bodyHeight * 0.16)}">z</text></g>
+        <path class="sweat" d="M ${sweatPoint(0, 0)} C ${sweatPoint(5, 7)} ${sweatPoint(5, 11)} ${sweatPoint(0, 13)} C ${sweatPoint(-5, 11)} ${sweatPoint(-4, 6)} ${sweatPoint(0, 0)} Z" fill="#BFE3FF"/>
       </g>
-      <g class="mouth idle-mouth"><path d="M45 73 Q50 78 55 73" fill="none" stroke="#111117" stroke-width="3" stroke-linecap="round"/></g>
-      <g class="mouth happy-mouth"><path d="M42 71 Q50 83 58 71 Q50 76 42 71Z" fill="#111117"/></g>
-      <g class="mouth sleepy-mouth"><ellipse cx="50" cy="75" rx="3.5" ry="4.5" fill="#111117"/></g>
-      <g class="mouth surprised-mouth"><ellipse cx="50" cy="74" rx="5" ry="7" fill="#111117"/><ellipse cx="48.5" cy="71.5" rx="1.3" ry="1.8" fill="#fff" opacity=".45"/></g>
-      <g class="mouth oops-mouth"><path d="M43 75 Q46 71 50 75 Q54 79 58 74" fill="none" stroke="#111117" stroke-width="3" stroke-linecap="round"/></g>
-      <g class="thought-dots" fill="#D5C8FF"><circle cx="40" cy="10" r="3"/><circle cx="50" cy="7" r="3.5"/><circle cx="61" cy="9" r="3"/></g>
-      <g class="sleep-z" fill="#D5C8FF" font-family="Nunito,system-ui" font-weight="900"><text x="75" y="22" font-size="14">z</text><text x="84" y="10" font-size="12">z</text></g>
-      <path class="sweat" d="M83 31 C88 38 88 42 83 44 C78 42 79 37 83 31Z" fill="#BFE3FF"/>
-      </g>
-      <g class="pet-hearts" fill="#FF8FB5"><path d="M19 28 C13 22 6 29 19 39 C32 29 25 22 19 28Z"/><path d="M79 24 C74 19 68 25 79 33 C90 25 84 19 79 24Z"/></g>
+      <g class="pet-hearts" fill="#FF8FB5"><path d="${heart(X(0.15), Y(0.18), eyeRX / 7 * 0.85)}"/><path d="${heart(X(0.85), Y(0.14), eyeRX / 7 * 0.85)}"/></g>
     `;
 
     const lookGroup = svg.querySelector('.look-group');
