@@ -13,6 +13,7 @@
   let nooby;
   let effects;
   let toastTimer = 0;
+  let surpriseInput = null;
 
   function cache() {
     const ids = [
@@ -40,6 +41,20 @@
 
   function label(provider) {
     return provider === 'gemini' ? 'Gemini' : 'OpenRouter';
+  }
+
+  function mountPreference() {
+    const anchor = document.getElementById('launch-startup');
+    const host = anchor ? anchor.closest('div') : null;
+    if (!host) return;
+    surpriseInput = document.createElement('input');
+    surpriseInput.type = 'checkbox';
+    surpriseInput.checked = true;
+    surpriseInput.addEventListener('change', () => patch({ surprisesEnabled: surpriseInput.checked }));
+    const row = document.createElement('label');
+    row.className = 'check-row';
+    row.append(surpriseInput, document.createTextNode(' Allow surprises'));
+    host.append(row);
   }
 
   function syncModels(provider) {
@@ -77,6 +92,7 @@
     el['volume-value'].textContent = `${Math.round(settings.sound.volume * 100)}%`;
     el['auto-close'].value = String(settings.autoCloseSeconds);
     el['launch-startup'].checked = settings.launchAtStartup;
+    if (surpriseInput) surpriseInput.checked = settings.surprisesEnabled !== false;
     nooby.setColor(settings.noobyColor);
     effects.configure(settings);
     for (const button of el['color-swatches'].querySelectorAll('button[data-color]')) {
@@ -222,6 +238,7 @@
 
   async function init() {
     cache();
+    mountPreference();
     nooby = window.createNooby({ size: 62, mood: 'happy' });
     document.getElementById('settings-nooby').append(nooby);
     effects = window.NoobyEffects.create({ layer: document.getElementById('settings-effects') });
