@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    name: Windows executables
+    runs-on: windows-latest
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install dependencies
+        run: npm install
+      - name: Build NSIS and portable apps
+        run: npx electron-builder --win --publish never
+      - name: Upload executables
+        uses: actions/upload-artifact@v4
+        with:
+          name: nooby-windows-${{ github.ref_name }}
+          path: dist/*.exe
+          if-no-files-found: error
+          retention-days: 14
