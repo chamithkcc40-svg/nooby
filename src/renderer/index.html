@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nooby App</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;display=swap">
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="nooby.js"></script>
+  <script defer src="effects.js"></script>
+  <script defer src="markdown.js"></script>
+  <script defer src="files.js"></script>
+  <script defer src="chat.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <div id="island" class="island is-collapsed" data-state="collapsed" tabindex="-1" aria-label="Nooby dynamic island">
+    <div id="ambient-layer" class="ambient-layer" aria-hidden="true"></div>
+    <button id="collapsed-view" class="collapsed-view" type="button" aria-label="Open Nooby">
+      <span id="collapsed-nooby" class="collapsed-nooby" aria-hidden="true"></span>
+      <span class="collapsed-name">nooby</span>
+      <span id="collapsed-thinking" class="collapsed-thinking" aria-label="Thinking"><i></i><i></i><i></i></span>
+      <span class="collapsed-status" aria-label="Provider key status">
+        <i id="collapsed-gemini-dot" class="status-dot missing" title="Gemini: no key"></i>
+        <i id="collapsed-openrouter-dot" class="status-dot missing" title="OpenRouter: no key"></i>
+      </span>
+    </button>
+
+    <div id="expanded-view" class="expanded-view" aria-hidden="true">
+      <header id="top-bar" class="top-bar">
+        <nav id="tabs" class="tabs" aria-label="Island tabs">
+          <span id="tab-indicator" class="tab-indicator" aria-hidden="true"></span>
+          <button class="tab active" type="button" data-tab="home" aria-selected="true">Home</button>
+          <button class="tab" type="button" data-tab="chat" aria-selected="false">Chat</button>
+          <button class="tab tab-plus" type="button" data-tab="files" aria-label="Files" aria-selected="false">+</button>
+        </nav>
+        <div class="top-actions">
+          <button id="sound-toggle" class="icon-button" type="button" aria-label="Mute sounds" title="Sound on"><span id="sound-icon">♪</span></button>
+          <button id="settings-button" class="icon-button gear" type="button" aria-label="Open settings" title="Settings">⚙</button>
+        </div>
+      </header>
+
+      <main id="tab-panels" class="tab-panels">
+        <section id="panel-home" class="panel home-panel" aria-label="Home">
+          <div class="home-main">
+            <div id="home-nooby" class="home-nooby" aria-hidden="true"></div>
+            <div class="home-copy">
+              <p id="greeting" class="greeting">Tiny island, big ideas.</p>
+              <div class="home-actions">
+                <button class="provider-chip" type="button" data-provider="gemini"><i id="home-gemini-dot" class="status-dot missing"></i>Gemini</button>
+                <button class="provider-chip" type="button" data-provider="openrouter"><i id="home-openrouter-dot" class="status-dot missing"></i>OpenRouter</button>
+                <button id="open-settings-home" class="text-button" type="button">Settings</button>
+              </div>
+            </div>
+          </div>
+          <div class="recent-row"><span>Recent</span><div id="recent-chats" class="recent-chats"></div></div>
+        </section>
+
+        <section id="panel-chat" class="panel chat-panel" aria-label="Chat" hidden>
+          <div class="chat-controls">
+            <div id="provider-switch" class="segmented" aria-label="Provider">
+              <button type="button" data-provider="gemini" class="active">Gemini</button>
+              <button type="button" data-provider="openrouter">OpenRouter</button>
+            </div>
+            <button id="new-chat" class="text-button new-chat" type="button">New chat</button>
+          </div>
+          <div id="model-dropdown" class="model-dropdown">
+            <button id="model-select-button" class="model-select" type="button" aria-haspopup="listbox" aria-expanded="false">
+              <span id="model-select-label">Fetch live models</span><span class="chevron">⌄</span>
+            </button>
+            <div id="model-menu" class="model-menu" hidden>
+              <input id="model-search" type="search" placeholder="Search models…" maxlength="100" aria-label="Search models">
+              <label id="free-toggle-wrap" class="free-toggle" hidden><input id="free-only" type="checkbox"> Free only</label>
+              <div id="model-options" class="model-options" role="listbox"></div>
+            </div>
+          </div>
+          <div id="messages" class="messages" aria-live="polite" aria-label="Messages">
+            <div id="chat-empty" class="chat-empty"><div id="chat-nooby" aria-hidden="true"></div><p>What shall we noodle on?</p></div>
+          </div>
+          <div id="retry-banner" class="retry-banner" hidden><span class="mini-spinner"></span><span id="retry-text"></span></div>
+          <div id="composer-attachments" class="attachment-chips" aria-label="Attachments"></div>
+          <form id="chat-form" class="composer">
+            <textarea id="chat-input" rows="1" maxlength="12000" placeholder="Ask Nooby…" aria-label="Message"></textarea>
+            <button id="send-button" class="send-button" type="submit" aria-label="Send message" title="Send">↑</button>
+            <button id="stop-button" class="stop-button" type="button" aria-label="Stop generating" title="Stop" hidden>■</button>
+          </form>
+        </section>
+
+        <section id="panel-files" class="panel files-panel" aria-label="Files" hidden>
+          <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Drop files, paste, or browse">
+            <input id="file-input" type="file" multiple hidden accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.md,.json,.csv,.py,.js,.jsx,.ts,.tsx,.kt,.java,.html,.css,.xml,.yml,.yaml,.toml,.rs,.go,.c,.h,.cpp,.cs,.rb,.php,.swift,.sh,.sql">
+            <span class="drop-plus" aria-hidden="true">＋</span>
+            <span class="drop-copy"><strong>Drop a little snack</strong><small>click, paste, or drag it here</small></span>
+            <span class="file-type-chips" aria-hidden="true"><i>PDF</i><i>Images</i><i>Code</i><i>Docs</i></span>
+            <button id="browse-button" class="visually-hidden" type="button" tabindex="-1">Browse</button>
+          </div>
+          <div id="files-chips" class="attachment-chips files-chips" aria-label="Attached files"></div>
+          <p id="files-note" class="files-note">Images ≤10 MB · PDFs ≤20 MB · text ≤100k chars</p>
+        </section>
+      </main>
+    </div>
+
+    <div id="effects-layer" class="effects-layer" aria-hidden="true"></div>
+    <div id="toast" class="toast" role="status" hidden>
+      <div class="toast-line"><span id="toast-message"></span><button id="toast-close" type="button" aria-label="Dismiss">×</button></div>
+      <details id="toast-details" class="error-details" hidden><summary>details</summary><pre id="toast-details-text"></pre></details>
+    </div>
+    <span id="sr-status" class="visually-hidden" aria-live="polite"></span>
+  </div>
+</body>
+</html>
