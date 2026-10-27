@@ -88,12 +88,15 @@
         </section>
 
         <section id="panel-files" class="panel files-panel" aria-label="Files" hidden>
-          <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Drop files, paste, or browse">
-            <input id="file-input" type="file" multiple hidden accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.md,.json,.csv,.py,.js,.jsx,.ts,.tsx,.kt,.java,.html,.css,.xml,.yml,.yaml,.toml,.rs,.go,.c,.h,.cpp,.cs,.rb,.php,.swift,.sh,.sql">
-            <span class="drop-plus" aria-hidden="true">＋</span>
-            <span class="drop-copy"><strong>Drop a little snack</strong><small>click, paste, or drag it here</small></span>
-            <span class="file-type-chips" aria-hidden="true"><i>PDF</i><i>Images</i><i>Code</i><i>Docs</i></span>
-            <button id="browse-button" class="visually-hidden" type="button" tabindex="-1">Browse</button>
+          <div class="files-drop-row">
+            <div id="files-nooby" class="files-nooby" aria-hidden="true"></div>
+            <div id="drop-zone" class="drop-zone" role="button" tabindex="0" aria-label="Drop files, paste, or browse">
+              <input id="file-input" type="file" multiple hidden accept=".png,.jpg,.jpeg,.webp,.gif,.pdf,.txt,.md,.json,.csv,.py,.js,.jsx,.ts,.tsx,.kt,.java,.html,.css,.xml,.yml,.yaml,.toml,.rs,.go,.c,.h,.cpp,.cs,.rb,.php,.swift,.sh,.sql">
+              <span class="drop-plus" aria-hidden="true">＋</span>
+              <span class="drop-copy"><strong>Drop a little snack</strong><small>click, paste, or drag it here</small></span>
+              <span class="file-type-chips" aria-hidden="true"><i>PDF</i><i>Images</i><i>Code</i><i>Docs</i></span>
+              <button id="browse-button" class="visually-hidden" type="button" tabindex="-1">Browse</button>
+            </div>
           </div>
           <div id="files-chips" class="attachment-chips files-chips" aria-label="Attached files"></div>
           <p id="files-note" class="files-note">Images ≤10 MB · PDFs ≤20 MB · text ≤100k chars</p>
