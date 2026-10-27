@@ -64,7 +64,7 @@
       clearAmbient();
       if (!ambientLayer || !expanded || reducedMotion.matches || destroyed) return;
       const fragment = document.createDocumentFragment();
-      for (let index = 0; index < 12; index += 1) {
+      for (let index = 0; index < 9; index += 1) {
         const sparkle = document.createElement('i');
         sparkle.className = 'floating-sparkle';
         sparkle.style.left = `${5 + Math.random() * 90}%`;
