@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data:; connect-src 'none'; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Settings - Nooby</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&amp;display=swap">
+  <link rel="stylesheet" href="settings.css">
+  <script defer src="../renderer/nooby.js"></script>
+  <script defer src="../renderer/effects.js"></script>
+  <script defer src="settings.js"></script>
+</head>
+<body>
+  <div id="settings-effects" class="settings-effects" aria-hidden="true"></div>
+  <header class="settings-header">
+    <div id="settings-nooby" aria-hidden="true"></div>
+    <div><h1>Settings</h1><p>Make your little island feel like home.</p></div>
+  </header>
+  <main>
+    <section class="settings-section">
+      <h2>Providers</h2>
+      <article class="provider-card">
+        <div class="card-title"><h3>Gemini</h3><span id="gemini-status" class="key-status">No key saved</span></div>
+        <label for="gemini-key">API key</label>
+        <div class="key-row"><input id="gemini-key" type="password" placeholder="Paste a Gemini key" autocomplete="new-password" spellcheck="false"><button id="gemini-save" type="button">Save</button></div>
+        <div class="card-actions"><button id="gemini-test" type="button">Test</button><button id="gemini-remove" type="button">Remove</button><button id="gemini-models-refresh" type="button">Refresh live models</button></div>
+        <label for="gemini-model">Default model</label>
+        <select id="gemini-model" disabled><option value="">No live models loaded</option></select>
+      </article>
+      <article class="provider-card">
+        <div class="card-title"><h3>OpenRouter</h3><span id="openrouter-status" class="key-status">No key saved</span></div>
+        <label for="openrouter-key">API key</label>
+        <div class="key-row"><input id="openrouter-key" type="password" placeholder="Paste an OpenRouter key" autocomplete="new-password" spellcheck="false"><button id="openrouter-save" type="button">Save</button></div>
+        <div class="card-actions"><button id="openrouter-test" type="button">Test</button><button id="openrouter-remove" type="button">Remove</button><button id="openrouter-models-refresh" type="button">Refresh live models</button></div>
+        <label for="openrouter-model">Default model</label>
+        <select id="openrouter-model" disabled><option value="">No live models loaded</option></select>
+      </article>
+    </section>
+
+    <section class="settings-section">
+      <h2>Defaults</h2>
+      <label for="default-provider">Default provider</label>
+      <select id="default-provider"><option value="gemini">Gemini</option><option value="openrouter">OpenRouter</option></select>
+      <label for="system-prompt">Nooby’s system prompt</label>
+      <textarea id="system-prompt" rows="3" maxlength="4000"></textarea>
+      <button id="save-defaults" class="primary-button" type="button">Save defaults</button>
+    </section>
+
+    <section class="settings-section two-column">
+      <div><h2>Sound</h2><label class="check-row"><input id="sound-enabled" type="checkbox"> Tiny sounds</label><label for="sound-volume">Volume <span id="volume-value">55%</span></label><input id="sound-volume" type="range" min="0" max="1" step="0.05" value="0.55"></div>
+      <div><h2>Island</h2><label for="auto-close">Auto-close after</label><select id="auto-close"><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option></select><label class="check-row"><input id="launch-startup" type="checkbox"> Launch at startup</label></div>
+    </section>
+
+    <section class="settings-section">
+      <h2>Nooby’s color</h2>
+      <div id="color-swatches" class="color-swatches" aria-label="Nooby color">
+        <button type="button" data-color="#FFF6E9" style="--swatch:#FFF6E9" aria-label="Cream"></button>
+        <button type="button" data-color="#B8F2D0" style="--swatch:#B8F2D0" aria-label="Mint"></button>
+        <button type="button" data-color="#FFC9B5" style="--swatch:#FFC9B5" aria-label="Peach"></button>
+        <button type="button" data-color="#D5C8FF" style="--swatch:#D5C8FF" aria-label="Lavender"></button>
+        <button type="button" data-color="#BFE3FF" style="--swatch:#BFE3FF" aria-label="Sky"></button>
+        <button type="button" data-color="#FFC6DD" style="--swatch:#FFC6DD" aria-label="Pink"></button>
+      </div>
+    </section>
+  </main>
+  <div id="settings-toast" class="settings-toast" role="status" hidden>
+    <div><span id="settings-toast-message"></span><button id="settings-toast-close" type="button" aria-label="Dismiss">×</button></div>
+    <details id="settings-toast-details" hidden><summary>details</summary><pre id="settings-toast-details-text"></pre></details>
+  </div>
+</body>
+</html>
