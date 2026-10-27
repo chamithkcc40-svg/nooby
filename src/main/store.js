@@ -13,7 +13,8 @@ const DEFAULT_SETTINGS = Object.freeze({
   sound: { enabled: true, volume: 0.55 },
   autoCloseSeconds: 15,
   launchAtStartup: false,
-  noobyColor: '#B8F2D0'
+  noobyColor: '#B8F2D0',
+  surprisesEnabled: true
 });
 
 class StoreError extends Error {
@@ -66,7 +67,7 @@ function modelName(provider, value) {
 
 function cleanSettings(partial, current = DEFAULT_SETTINGS) {
   assertObject(partial, 'Settings');
-  const top = ['provider', 'models', 'systemPrompt', 'sound', 'autoCloseSeconds', 'launchAtStartup', 'noobyColor'];
+  const top = ['provider', 'models', 'systemPrompt', 'sound', 'autoCloseSeconds', 'launchAtStartup', 'noobyColor', 'surprisesEnabled'];
   checkKeys(partial, top, 'Settings');
   const next = clone(current);
   if (partial.provider !== undefined) next.provider = providerName(partial.provider);
@@ -93,6 +94,12 @@ function cleanSettings(partial, current = DEFAULT_SETTINGS) {
       throw new StoreError('INVALID_SETTINGS', 'Please pick one of Nooby’s six colors.');
     }
     next.noobyColor = partial.noobyColor;
+  }
+  if (partial.surprisesEnabled !== undefined) {
+    if (typeof partial.surprisesEnabled !== 'boolean') {
+      throw new StoreError('INVALID_SETTINGS', 'This preference must be on or off.');
+    }
+    next.surprisesEnabled = partial.surprisesEnabled;
   }
   if (partial.models !== undefined) {
     assertObject(partial.models, 'Model defaults');
